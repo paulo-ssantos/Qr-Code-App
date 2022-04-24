@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "qr-code-app",
+    "slug": "qr-code-app",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
