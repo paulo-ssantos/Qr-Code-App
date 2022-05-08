@@ -1,56 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import { Text, View, Image, StyleSheet, Button, ToastAndroid, TouchableOpacity} from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { BarCodeScanner } from 'expo-barcode-scanner';
-import * as Clipboard from 'expo-clipboard';
-import { style } from '../styles';
+import React, { useState, useEffect } from "react"
+import {
+  Text,
+  View,
+  Button,
+  ToastAndroid,
+  TouchableOpacity,
+  Switch,
+} from "react-native"
+import Icon from "react-native-vector-icons/FontAwesome"
+import { BarCodeScanner } from "expo-barcode-scanner"
+import * as Clipboard from "expo-clipboard"
+import { style } from "../styles"
 
-export default function App({navigation}) {
-  const [hasPermission, setHasPermission] = useState(null);
-  const [scanned, setScanned] = useState(false);
-  const [text, setText] = useState('Not yet scanned')
-  const [value, setValue] = useState("empty")
+export default function App({ navigation }) {
+  const [hasPermission, setHasPermission] = useState(null)
+  const [scanned, setScanned] = useState(false)
+  const [text, setText] = useState("Not yet scanned")
   const [history, setHistory] = useState([])
-  const [idCounter, setIdCounter] = useState(0)
+  const [idCounter, setIdCounter] = useState(1)
+  const [flashMode, setFlashMode] = useState(false)
+  const [counterScan, setCounterScan] = useState(0)
 
   const askForCameraPermission = () => {
-    (async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
-      setHasPermission(status === 'granted');
+    ;(async () => {
+      const { status } = await BarCodeScanner.requestPermissionsAsync()
+      setHasPermission(status === "granted")
     })()
   }
 
   // Request Camera Permission
   useEffect(() => {
-    askForCameraPermission();
-  }, []);
-
-
+    askForCameraPermission()
+  }, [])
 
   // What happens when we scan the bar code
   const handleBarCodeScanned = ({ type, data }) => {
-    setIdCounter(idCounter+1)
-    setScanned(true)
-    setText(data)
-    Clipboard.setString(data)
-    ToastAndroid.show('Copy to Clipboard', 2000)
-    setHistory( arr => [...arr, {id: idCounter, data: data}])
-  };
-
+    console.log()
+    if (flashMode) {
+      setScanned(false)
+      if (data != history[history.length - 1].data) {
+        setCounterScan(counterScan + 1)
+        setIdCounter(idCounter + 1)
+        setHistory((arr) => [...arr, { id: idCounter, data: data }])
+        setText(data)
+        Clipboard.setString(data)
+        ToastAndroid.show("Copy to Clipboard", 2000)
+      }
+    } else {
+      setScanned(true)
+      setCounterScan(counterScan + 1)
+      setIdCounter(idCounter + 1)
+      setHistory((arr) => [...arr, { id: idCounter, data: data }])
+      setText(data)
+      Clipboard.setString(data)
+      ToastAndroid.show("Copy to Clipboard", 2000)
+    }
+  }
 
   // Check permissions and return the screens
   if (hasPermission === null) {
     return (
       <View style={style.container}>
         <Text>Requesting for camera permission</Text>
-      </View>)
+      </View>
+    )
   }
   if (hasPermission === false) {
     return (
       <View style={style.container}>
         <Text style={{ margin: 10 }}>No access to camera</Text>
-        <Button title={'Allow Camera'} onPress={() => askForCameraPermission()} />
-      </View>)
+        <Button
+          title={"Allow Camera"}
+          onPress={() => askForCameraPermission()}
+        />
+      </View>
+    )
   }
 
   // Return the View
@@ -59,20 +83,49 @@ export default function App({navigation}) {
       <View style={style.barcodebox}>
         <BarCodeScanner
           onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-          style={{ height: 800, width: 800 }} />
+          style={{ height: 800, width: 800 }}
+        />
       </View>
-      
       <Text style={style.maintext}>{text}</Text>
-      {scanned && <Button title={'Scan again?'} onPress={() => setScanned(false)} color='tomato' />}
-      
+      {scanned && (
+        <Button
+          title={"Scan again?"}
+          onPress={() => {
+            setScanned(false)
+          }}
+          color="tomato"
+        />
+      )}
+
+      <View style={style.rowContainer}>
+        <Text style={style.itemText}>Flashmode:</Text>
+        <Switch
+          rackColor={{ false: "#767577", true: "#81b0ff" }}
+          thumbColor={flashMode ? "#fff" : "#f4f3f4"}
+          onValueChange={() => {
+            setFlashMode(!flashMode)
+          }}
+          value={flashMode}
+        />
+      </View>
+
       <TouchableOpacity
-          //onPress={() => (navigation.push('About', history))}
-          onPress={() =>
-            navigation.navigate('About', {history})
-          }
-          style={style.fab}>
-          <Icon name="history" size={30} color="#fff" />
+        onPress={() => {
+          navigation.navigate("About", { history })
+        }}
+        style={style.fab}
+      >
+        <Icon name="history" size={30} color="#fff" />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={style.fabCounter}
+        onPress={() => {
+          console.log(scanned)
+        }}
+      >
+        <Text style={style.counter}>{counterScan}</Text>
       </TouchableOpacity>
     </View>
-  );
+  )
 }
