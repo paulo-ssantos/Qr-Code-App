@@ -8,6 +8,7 @@ import {
 } from "react-native"
 import Icon from "react-native-vector-icons/FontAwesome"
 import * as Clipboard from "expo-clipboard"
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { style } from "../styles"
 
 export default function App({ navigation }) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"
+import { StatusBar } from "expo-status-bar"
 import {
   Text,
   View,
@@ -10,14 +11,15 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome"
 import { BarCodeScanner } from "expo-barcode-scanner"
 import * as Clipboard from "expo-clipboard"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { style } from "../styles"
+import database from "../database"
 
 export default function App({ navigation }) {
   const [hasPermission, setHasPermission] = useState(null)
   const [scanned, setScanned] = useState(false)
   const [text, setText] = useState("Not yet scanned")
   const [history, setHistory] = useState([])
-  const [idCounter, setIdCounter] = useState(1)
   const [flashMode, setFlashMode] = useState(false)
   const [counterScan, setCounterScan] = useState(0)
 
@@ -34,14 +36,15 @@ export default function App({ navigation }) {
   }, [])
 
   // What happens when we scan the bar code
-  const handleBarCodeScanned = ({ type, data }) => {
+
+  const handleBarCodeScanned = async ({ type, data }) => {
     console.log()
     if (flashMode) {
       setScanned(false)
-      if (data != history[history.length - 1].data) {
+      let storageItens = await database.getItens()
+      if (data != storageItens[storageItens.length - 1].data) {
         setCounterScan(counterScan + 1)
-        setIdCounter(idCounter + 1)
-        setHistory((arr) => [...arr, { id: idCounter, data: data }])
+        database.saveItem(data)
         setText(data)
         Clipboard.setString(data)
         ToastAndroid.show("Copy to Clipboard", 2000)
@@ -49,8 +52,7 @@ export default function App({ navigation }) {
     } else {
       setScanned(true)
       setCounterScan(counterScan + 1)
-      setIdCounter(idCounter + 1)
-      setHistory((arr) => [...arr, { id: idCounter, data: data }])
+      database.saveItem(data)
       setText(data)
       Clipboard.setString(data)
       ToastAndroid.show("Copy to Clipboard", 2000)
@@ -80,6 +82,7 @@ export default function App({ navigation }) {
   // Return the View
   return (
     <View style={style.container}>
+      <StatusBar style="auto" />
       <View style={style.barcodebox}>
         <BarCodeScanner
           onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}

@@ -4,7 +4,7 @@ import homeScreen from "./screens/home.js"
 import aboutScreen from "./screens/about"
 
 const screens = {
-  Home: {
+  Scanner: {
     screen: homeScreen,
   },
   About: {
