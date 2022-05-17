@@ -11,17 +11,16 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome"
 import { BarCodeScanner } from "expo-barcode-scanner"
 import * as Clipboard from "expo-clipboard"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { style } from "../styles"
 import database from "../database"
 
-export default function App({ navigation }) {
+export default function App({ route, navigation }) {
   const [hasPermission, setHasPermission] = useState(null)
   const [scanned, setScanned] = useState(false)
   const [text, setText] = useState("Not yet scanned")
-  const [history, setHistory] = useState([])
   const [flashMode, setFlashMode] = useState(false)
   const [counterScan, setCounterScan] = useState(0)
+  const [isFocused, setIsFocused] = useState(true)
 
   const askForCameraPermission = () => {
     ;(async () => {
@@ -33,12 +32,15 @@ export default function App({ navigation }) {
   // Request Camera Permission
   useEffect(() => {
     askForCameraPermission()
-  }, [])
+  }, [route])
+
+  // useEffect(() => {
+  //   setIsFocused(true)
+  // }, [hasPermission])
 
   // What happens when we scan the bar code
 
   const handleBarCodeScanned = async ({ type, data }) => {
-    console.log()
     if (flashMode) {
       setScanned(false)
       let storageItens = await database.getItens()
@@ -46,7 +48,7 @@ export default function App({ navigation }) {
         setCounterScan(counterScan + 1)
         database.saveItem(data)
         setText(data)
-        Clipboard.setString(data)
+        Clipboard.setStringAsync(data)
         ToastAndroid.show("Copy to Clipboard", 2000)
       }
     } else {
@@ -54,7 +56,7 @@ export default function App({ navigation }) {
       setCounterScan(counterScan + 1)
       database.saveItem(data)
       setText(data)
-      Clipboard.setString(data)
+      Clipboard.setStringAsync(data)
       ToastAndroid.show("Copy to Clipboard", 2000)
     }
   }
@@ -84,16 +86,19 @@ export default function App({ navigation }) {
     <View style={style.container}>
       <StatusBar style="auto" />
       <View style={style.barcodebox}>
-        <BarCodeScanner
-          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-          style={{ height: 800, width: 800 }}
-        />
+        {isFocused && (
+          <BarCodeScanner
+            onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+            style={{ height: 800, width: 800 }}
+          />
+        )}
       </View>
       <Text style={style.maintext}>{text}</Text>
       {scanned && (
         <Button
           title={"Scan again?"}
           onPress={() => {
+            setIsFocused(true)
             setScanned(false)
           }}
           color="tomato"
@@ -114,7 +119,10 @@ export default function App({ navigation }) {
 
       <TouchableOpacity
         onPress={() => {
-          navigation.navigate("About", { history })
+          setIsFocused(false)
+          setFlashMode(false)
+          setScanned(true)
+          navigation.navigate("About")
         }}
         style={style.fab}
       >
@@ -124,7 +132,7 @@ export default function App({ navigation }) {
       <TouchableOpacity
         style={style.fabCounter}
         onPress={() => {
-          console.log(scanned)
+          setIsFocused(!isFocused)
         }}
       >
         <Text style={style.counter}>{counterScan}</Text>

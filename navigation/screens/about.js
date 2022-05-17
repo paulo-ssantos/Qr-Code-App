@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Text,
   View,
@@ -8,12 +8,15 @@ import {
 } from "react-native"
 import Icon from "react-native-vector-icons/FontAwesome"
 import * as Clipboard from "expo-clipboard"
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import database from "../database"
 import { style } from "../styles"
 
-export default function App({ navigation }) {
-  const [history, setHistory] = useState(navigation.state.params.history)
-  const [scanned, setScanned] = useState(false)
+export default function App({ route, navigation }) {
+  const [history, setHistory] = useState([])
+
+  useEffect(() => {
+    database.getItens().then((itens) => setHistory(itens))
+  }, [route])
 
   return (
     <View style={style.container}>
@@ -23,7 +26,7 @@ export default function App({ navigation }) {
           <TouchableOpacity
             style={style.itemContainer}
             onPress={() => {
-              Clipboard.setString(item.data)
+              Clipboard.setStringAsync(item.data)
               ToastAndroid.show("Copy to Clipboard", 2000)
             }}
           >
@@ -33,7 +36,13 @@ export default function App({ navigation }) {
         )}
       />
 
-      <TouchableOpacity onPress={() => setHistory([])} style={style.fab}>
+      <TouchableOpacity
+        onPress={() => {
+          database.clear()
+          setHistory([])
+        }}
+        style={style.fab}
+      >
         <Icon name="close" size={30} color="#fff" />
       </TouchableOpacity>
     </View>

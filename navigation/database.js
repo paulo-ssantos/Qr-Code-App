@@ -19,7 +19,12 @@ function getItens() {
   })
 }
 
+function clear() {
+  return AsyncStorage.clear()
+}
+
 module.exports = {
   saveItem,
   getItens,
+  clear,
 }
