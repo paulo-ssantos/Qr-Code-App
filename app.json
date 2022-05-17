@@ -6,11 +6,11 @@
     "slug": "qr-code-app",
     "ios": {
       "bundleIdentifier": "com.test.qrcodeapp",
-      "buildNumber": "1.0.0"
+      "buildNumber": "2.0.0"
     },
     "android": {
       "package": "com.test.qrcodeapp",
-      "versionCode": 1
+      "versionCode": 2
     }
   }
 }
